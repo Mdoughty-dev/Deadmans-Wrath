@@ -107,7 +107,20 @@ def draw_battle_ui():
 
     log_text = g.font.render(battle_log, True, g.WHITE)
     screen.blit(log_text, (g.WIDTH // 2 - log_text.get_width() // 2, 30))
-
+##MENU UI 
+def draw_menu():
+     screen.fill(g.BLACK)   
+     pygame.draw.rect(screen, g.WHITE, (0, 0, g.WIDTH / 2, g.HEIGHT), 4)
+     pygame.draw.rect(screen, g.WHITE, (0, 0, g.WIDTH / 2, 150), 4)
+     party = g.font.render("PARTY", True, g.WHITE)
+     screen.blit(party, (400, 75))
+     pygame.draw.rect(screen, g.WHITE, (g.WIDTH / 2, 0, g.WIDTH / 2, g.HEIGHT), 4)
+     pygame.draw.rect(screen, g.WHITE, (g.WIDTH / 2, 0, g.WIDTH / 2, 150), 4)
+     notes = g.font.render("NOTES", True, g.WHITE)
+     screen.blit(notes, (g.WIDTH - 550, 75))
+     profile_pic_width = 200
+     profile_pic_height = 200
+     pygame.draw.rect(screen, g.WHITE, (100, 250, profile_pic_width, profile_pic_height))
 
 # Main loop
 running = True
@@ -127,14 +140,14 @@ while running:
                     magic_index = (magic_index - 1) % len(g.magic_options)
                 elif event.key == pygame.K_RETURN:
                     spell = g.magic_options[magic_index]
-                    if spell == "Lightning" and player_mp >= 10:
+                    if spell == "Hex" and player_mp >= 10:
                         player_mp -= 10
                         enemy_hp -= 50
-                        battle_log = f"{g.player_name} casts Lightning for 50 damage!"
+                        battle_log = f"{g.player_name} casts Hex for 50 damage!"
                     elif spell == "Cure" and player_mp >= 5:
                         player_mp -= 5
-                        player_hp = min(player_max_hp, player_hp + 25)
-                        battle_log = f"{g.player_name} casts Cure and heals 25 HP!"
+                        player_hp = min(player_max_hp, player_hp + 40)
+                        battle_log = f"{g.player_name} casts Cure and heals 40 HP!"
                     player_atb = 0
                     player_turn = False
                     in_magic_menu = False
@@ -183,6 +196,9 @@ while running:
         screen.blit(door_surface, (door_rect.x - camera_x, door_rect.y))
 
         screen.blit(player_image, (player.x - camera_x, player.y))
+
+        if keys[pygame.K_m]:
+            game_state = g.STATE_MENU
 
         if player.colliderect(enemy):
             game_state = g.STATE_BATTLE
@@ -302,6 +318,10 @@ while running:
             player_image = pygame.transform.scale(
                 original_player_image, (int(player.width), int(player.height))
             )
+    if game_state == g.STATE_MENU:
+        draw_menu();
+        if keys[pygame.K_b]:
+            game_state = g.STATE_EXPLORE
 
     pygame.display.flip()
     clock.tick(g.FPS)

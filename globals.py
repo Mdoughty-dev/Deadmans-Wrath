@@ -17,6 +17,7 @@ DARK_BLUE = (0, 0, 125)
 STATE_EXPLORE = "explore"
 STATE_BATTLE = "battle"
 STATE_BAR = "bar"
+STATE_MENU = "menu"
 
 # Fonts (initialize pygame.font in main before import if needed)
 pygame.font.init()
