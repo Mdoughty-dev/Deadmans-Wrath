@@ -24,7 +24,7 @@ font = pygame.font.SysFont(None, 70)
 small_font = pygame.font.SysFont(None, 50)
 
 # Battle variables
-player_name = "Cloud"
+player_name = "Maddo"
 player_hp = 100
 player_max_hp = 100
 player_mp = 30
@@ -33,7 +33,7 @@ player_atb = 0
 atb_max = 100
 battle_menu_index = 0
 menu_options = ["Attack", "Magic", "Item"]
-magic_options = ["Lightning", "Cure"]
+magic_options = ["Hex", "Cure"]
 magic_index = 0
 player_turn = False
 in_magic_menu = False

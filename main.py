@@ -1,7 +1,7 @@
 import pygame
 import sys
 from loader import load_assets
-import globals as g  # Import your globals module as alias g
+import globals as g
 
 pygame.init()
 
@@ -25,19 +25,21 @@ player_image = pygame.transform.scale(original_player_image, (int(player.width),
 enemy = pygame.Rect(1800, (g.HEIGHT / 2) - (g.HEIGHT / 8), g.HEIGHT / 8, g.HEIGHT / 4)
 enemy_image = pygame.transform.scale(creeper, (int(enemy.width), int(enemy.height)))
 
-# character 
-character = pygame.Rect(1400, 500, 300, 300)
+# Character
+character = pygame.Rect(300, 200, 300, 300)
 
 # Door setup
 door_rect = pygame.Rect(1400, g.HEIGHT - 625, 80, 150)
 
-#dialogue
+# Dialogue
+character_speech = ["hello", "how are you", "what do you want"]
 dialogue_tracker = 0
+show_dialogue = False
 
 # Initialize game state
 game_state = g.STATE_EXPLORE
 
-# Use globals for battle variables
+# Battle variables
 player_hp = g.player_hp
 player_max_hp = g.player_max_hp
 player_mp = g.player_mp
@@ -57,6 +59,7 @@ enemy_attack_index = g.enemy_attack_index
 
 camera_x = g.camera_x
 
+
 def draw_battle_ui():
     box_width = 300
     box_height = 200
@@ -64,7 +67,7 @@ def draw_battle_ui():
     box_y = g.HEIGHT - box_height - 170
 
     pygame.draw.rect(screen, g.DARK_BLUE, (box_x + 300, box_y, box_width, box_height))
-    pygame.draw.rect(screen, g.WHITE, (box_x +300, box_y, box_width, box_height), 4)
+    pygame.draw.rect(screen, g.WHITE, (box_x + 300, box_y, box_width, box_height), 4)
 
     options = g.magic_options if in_magic_menu else g.menu_options
     selected_index = magic_index if in_magic_menu else battle_menu_index
@@ -74,18 +77,15 @@ def draw_battle_ui():
         text = g.font.render(option, True, color)
         screen.blit(text, (box_x + 320, box_y + i * 55))
 
-    # Info Box
     info_box_height = 160
     info_box_y = box_y
 
-    #player_boxes
     pygame.draw.rect(screen, g.DARK_BLUE, (box_x, box_y, box_width, box_height))
     pygame.draw.rect(screen, g.WHITE, (box_x, box_y, box_width, box_height), 4)
-    
-    # enemy boxes
+
     pygame.draw.rect(screen, g.DARK_BLUE, (g.WIDTH - 620, box_y, 500, info_box_height))
     pygame.draw.rect(screen, g.RED, (g.WIDTH - 620, box_y, 500, info_box_height), 4)
-     
+
     name_text = g.font.render(g.player_name, True, g.WHITE)
     hp_text = g.font.render(f"HP: {player_hp}/{player_max_hp}", True, g.WHITE)
     mp_text = g.font.render(f"MP: {player_mp}/{player_max_mp}", True, g.WHITE)
@@ -96,7 +96,6 @@ def draw_battle_ui():
     screen.blit(mp_text, (box_x + 20, info_box_y + 100))
     screen.blit(enemy_hp_text, (g.WIDTH - 600, info_box_y + 60))
 
-    # ATB Bar
     atb_bar_width = box_width - 40
     atb_bar_height = 10
     atb_x = box_x + 20
@@ -106,7 +105,7 @@ def draw_battle_ui():
     atb_fill = int((player_atb / g.atb_max) * (atb_bar_width - 4))
     pygame.draw.rect(screen, (50, 100, 255), (atb_x + 2, atb_y + 2, atb_fill, atb_bar_height - 4))
 
-
+    log_text = g.font.render(battle_log, True, g.WHITE)
     screen.blit(log_text, (g.WIDTH // 2 - log_text.get_width() // 2, 30))
 
 
@@ -119,6 +118,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+        # Battle input
         if game_state == g.STATE_BATTLE and player_turn and event.type == pygame.KEYDOWN:
             if in_magic_menu:
                 if event.key == pygame.K_DOWN:
@@ -156,6 +156,18 @@ while running:
                     player_atb = 0
                     player_turn = False
 
+        # Bar dialogue input
+        if game_state == g.STATE_BAR and event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_e and player.colliderect(character):
+                if not show_dialogue:
+                    show_dialogue = True
+                    dialogue_tracker = 0
+                else:
+                    dialogue_tracker += 1
+                    if dialogue_tracker >= len(character_speech):
+                        dialogue_tracker = 0
+                        show_dialogue = False
+
     if game_state == g.STATE_EXPLORE:
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             player.x -= g.player_speed
@@ -178,19 +190,33 @@ while running:
             enemy_atb = 0
             player_turn = False
             enemy_turn = False
+            player.x = 450
+            player.y = 175
+            enemy.y = 175
+            enemy.x -= 150
+            player.width = player.width * 2
+            player.height = player.height * 2
+            player_image = pygame.transform.scale(original_player_image,(int(player.width),int(player.height)))
+            enemy.width = enemy.width * 2
+            enemy.height = enemy.height * 2
+            enemy_image = pygame.transform.scale(creeper,(int(enemy.width), int(enemy.height)))
 
         if player.colliderect(door_rect) and keys[pygame.K_e]:
             game_state = g.STATE_BAR
-            player.x = 950
-            player.y = 900
+            show_dialogue = False
+            dialogue_tracker = 0
+            player.x = 100
+            player.y = 300
             player.width = player.width * 2
             player.height = player.height * 2
-            player_image = pygame.transform.scale(original_player_image, (int(player.width), int(player.height)))
+            player_image = pygame.transform.scale(
+                original_player_image, (int(player.width), int(player.height))
+            )
 
     elif game_state == g.STATE_BATTLE:
         screen.fill(g.BLACK)
         screen.blit(enemy_image, (g.WIDTH - enemy.width - 100, enemy.y))
-        screen.blit(player_image, (100, player.y))
+        screen.blit(player_image, (250, player.y))
 
         if not player_turn:
             player_atb += 0.5
@@ -200,6 +226,7 @@ while running:
 
         if not player_turn and not enemy_turn:
             enemy_atb += 0.5
+            battle_log = ""
             if enemy_atb >= g.atb_max:
                 enemy_turn = True
 
@@ -223,7 +250,16 @@ while running:
             battle_log = "Enemy defeated!"
             print("Enemy defeated!")
             game_state = g.STATE_EXPLORE
-            enemy.x = 10000  # move enemy off screen
+            enemy.x = 10000
+            player.y = 450
+            player.x = 1800
+            player.width = player.width / 2
+            player.height = player.height / 2
+            player_image = pygame.transform.scale(
+                original_player_image, (int(player.width), int(player.height))
+            )
+
+
 
         if keys[pygame.K_r]:
             game_state = g.STATE_EXPLORE
@@ -232,9 +268,10 @@ while running:
     elif game_state == g.STATE_BAR:
         screen.fill((30, 15, 15))
         screen.blit(bar, (0, 0))
+
         character_surface = pygame.Surface((character.width, character.height), pygame.SRCALPHA)
-        character_surface.fill((255, 0, 0, 150))
-        screen.blit(character_surface, (door_rect.x, door_rect.y))
+        character_surface.fill((0, 0, 0,0))
+        screen.blit(character_surface, (character.x, character.y))
 
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             player.y -= g.player_speed
@@ -244,31 +281,27 @@ while running:
             player.x -= g.player_speed
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             player.x += g.player_speed
-        if player.colliderect(character) and keys[pygame.K_e]:
 
-            #character_boxes
-            pygame.draw.rect(screen, g.DARK_BLUE, (character.x, character.y - 300, 300, 200))
-            pygame.draw.rect(screen, g.WHITE, (character.x, character.y - 300, 300, 200), 4)
-            character_speech = ["hello", "how are you", "what do you want"]
-            i = 0
-            if dialogue_tracker < len(character_speech):
-                character_text = g.font.render(character_speech[i], True, g.WHITE)
-                screen.blit(character_text, (character.x + 20, character.y - 300))
+        if player.colliderect(character) and show_dialogue:
+            pygame.draw.rect(screen, g.DARK_BLUE, (character.x, character.y - 50, 500, 100))
+            pygame.draw.rect(screen, g.WHITE, (character.x, character.y - 50, 500, 100), 4)
 
-                if not keys[pygame.K_e]:
-                    dialogue_tracker += 1
-            
-            
-        
-
-          
-
+            character_text = g.font.render(character_speech[dialogue_tracker], True, g.WHITE)
+            screen.blit(character_text, (character.x + 20, character.y - 30))
 
         screen.blit(player_image, (player.x, player.y))
-    
+
         if keys[pygame.K_b]:
             game_state = g.STATE_EXPLORE
+            show_dialogue = False
+            dialogue_tracker = 0
             player.x = door_rect.x + 100
+            player.y = 400
+            player.width = player.width / 2
+            player.height = player.height / 2
+            player_image = pygame.transform.scale(
+                original_player_image, (int(player.width), int(player.height))
+            )
 
     pygame.display.flip()
     clock.tick(g.FPS)
