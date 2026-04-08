@@ -59,6 +59,7 @@ def draw_menu(screen, state):
         screen.blit(hp_surface, (80, y + 45))
         screen.blit(mp_surface, (380, y + 45))
 
+    
     selected = party_members[state["menu_selected_character"]]
 
     info_y = 160

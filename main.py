@@ -73,6 +73,21 @@ state = {
         "frame_timer": 0,
         "animation_speed": 10,
     },
+     "attack_motion": {
+        "active": False,
+        "phase": "forward",
+        "timer": 0,
+        "duration": 8,
+        "distance": 80,
+        "start_x": 0,
+        "damage_applied": False,
+        "return_to_idle": False,
+    },
+    "hit_pause": 0,
+    "screen_shake": {
+        "timer": 0,
+        "strength": 0,
+    },
 }
 
 player_animations = scale_animation_set(
@@ -89,7 +104,7 @@ while running:
             running = False
 
         if state["game_state"] == g.STATE_BATTLE:
-            handle_battle_input(event, state)
+            handle_battle_input(event, state, player)
 
         if state["game_state"] == g.STATE_BAR:
             handle_bar_input(event, state, player, character_speech, character_rect)
@@ -148,8 +163,12 @@ while running:
         )
 
     elif state["game_state"] == g.STATE_BATTLE:
-        reset_player_visual_state(state, action="idle")
-        update_battle(state)
+        update_battle(state, player, enemy)
+        target_enemy_x = g.WIDTH - enemy.width - 100
+        if enemy.x > target_enemy_x:
+            enemy.x -= 2
+            if enemy.x < target_enemy_x:
+                enemy.x = target_enemy_x
         draw_battle(screen, state, player_image, enemy_image, player, enemy)
 
         if len(get_alive_party_indices(state["characters"])) == 0:
@@ -215,3 +234,4 @@ while running:
 
 pygame.quit()
 sys.exit()
+

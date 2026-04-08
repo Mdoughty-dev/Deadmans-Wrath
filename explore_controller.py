@@ -43,6 +43,7 @@ def draw_explore(screen, state, background, enemy_image, player_image, player, e
     screen.blit(player_image, (player.x - camera_x, player.y))
 
 
+
 def handle_explore_keys(
     state,
     keys,

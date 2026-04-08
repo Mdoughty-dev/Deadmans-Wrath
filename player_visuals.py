@@ -17,6 +17,7 @@ def update_player_animation(state, animations):
         visual["frame_index"] = (visual["frame_index"] + 1) % len(frames)
 
 
+
 def get_current_player_frame(state, animations, fallback_image):
     visual = state["player_visual_state"]
 

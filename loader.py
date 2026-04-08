@@ -24,6 +24,7 @@ def load_image(path, scale_to=None):
         sys.exit()
 
 
+
 def build_player_animations():
     idle_down = load_animation_folder("assets/player/idle_down")
     idle_up = load_animation_folder("assets/player/idle_up")

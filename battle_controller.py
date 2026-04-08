@@ -1,4 +1,5 @@
 import pygame
+import random
 import globals as g
 from enemies import make_creeper
 
@@ -22,6 +23,79 @@ def normalize_item(item):
 
 def get_party_members(characters):
     return [member for member in characters if member.get("in_party", False)]
+
+def start_attack_motion(state, player):
+    motion = state["attack_motion"]
+    motion["active"] = True
+    motion["phase"] = "forward"
+    motion["timer"] = 0
+    motion["start_x"] = player.x
+    motion["damage_applied"] = False
+    motion["return_to_idle"] = True
+
+    state["player_visual_state"]["action"] = "attack"
+    state["player_visual_state"]["frame_index"] = 0
+    state["player_visual_state"]["frame_timer"] = 0
+
+def trigger_hit_effects(state):
+    state["hit_pause"] = 5
+    state["screen_shake"]["timer"] = 8
+    state["screen_shake"]["strength"] = 8
+
+def update_attack_motion(state, player, enemy):
+    motion = state["attack_motion"]
+
+    if not motion["active"]:
+        return
+
+    if state["hit_pause"] > 0:
+        return
+
+    motion["timer"] += 1
+
+    t = motion["timer"] / motion["duration"]
+    if t > 1:
+        t = 1
+
+    progress = t * t * (3 - 2 * t)  # smoothstep
+
+    if motion["phase"] == "forward":
+        player.x = motion["start_x"] + motion["distance"] * progress
+
+        if t >= 0.6 and not motion["damage_applied"]:
+            state["current_enemy"]["hp"] -= 20
+            state["battle_log"] = f"{get_current_character(state)['name']} attacks for 20 damage!"
+            motion["damage_applied"] = True
+
+            enemy.x += 12
+            trigger_hit_effects(state)
+
+        if t >= 1:
+            motion["phase"] = "back"
+            motion["timer"] = 0
+
+    elif motion["phase"] == "back":
+        player.x = motion["start_x"] + motion["distance"] * (1 - progress)
+
+        if t >= 1:
+            player.x = motion["start_x"]
+            motion["active"] = False
+            get_current_character(state)["atb"] = 0
+            state["player_turn"] = False
+
+            if motion["return_to_idle"]:
+                state["player_visual_state"]["action"] = "idle"
+
+            queue_next_character(state)
+
+def update_hit_pause_and_shake(state):
+    if state["hit_pause"] > 0:
+        state["hit_pause"] -= 1
+
+    if state["screen_shake"]["timer"] > 0:
+        state["screen_shake"]["timer"] -= 1
+        if state["screen_shake"]["timer"] == 0:
+            state["screen_shake"]["strength"] = 0
 
 
 def get_alive_party_indices(characters):
@@ -137,15 +211,14 @@ def queue_next_character(state):
         state["sub_menu_index"] = 0
 
 
-def perform_attack(state):
+def perform_attack(state, player):
     current_character = get_current_character(state)
-    current_enemy = state["current_enemy"]
 
-    current_enemy["hp"] -= 20
-    state["battle_log"] = f"{current_character['name']} attacks for 20 damage!"
-    current_character["atb"] = 0
-    state["player_turn"] = False
-    queue_next_character(state)
+    if state["attack_motion"]["active"]:
+        return
+
+    state["battle_log"] = f"{current_character['name']} attacks!"
+    start_attack_motion(state, player)
 
 
 def perform_magic(state):
@@ -247,7 +320,7 @@ def enemy_take_turn(state):
     current_enemy["turn"] = False
 
 
-def handle_battle_input(event, state):
+def handle_battle_input(event, state, player):
     if event.type != pygame.KEYDOWN:
         return
 
@@ -289,7 +362,7 @@ def handle_battle_input(event, state):
             action = g.menu_options[state["battle_menu_index"]]
 
             if action == "Attack":
-                perform_attack(state)
+                perform_attack(state, player)
 
             elif action == "Magic":
                 if len(current_character.get("spells", [])) > 0:
@@ -321,7 +394,13 @@ def handle_battle_input(event, state):
                     perform_item(state)
 
 
-def update_battle(state):
+
+def update_battle(state, player, enemy):
+    update_hit_pause_and_shake(state)
+    update_attack_motion(state, player, enemy)
+
+    if state["attack_motion"]["active"] or state["hit_pause"] > 0:
+        return
     now = pygame.time.get_ticks()
     current_character = get_current_character(state)
     current_enemy = state["current_enemy"]
