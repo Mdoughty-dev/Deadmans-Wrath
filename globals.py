@@ -19,38 +19,19 @@ STATE_BATTLE = "battle"
 STATE_BAR = "bar"
 STATE_MENU = "menu"
 
-# Fonts (initialize pygame.font in main before import if needed)
 pygame.font.init()
 font = pygame.font.SysFont(None, 70)
 small_font = pygame.font.SysFont(None, 50)
 
-# Battle variables
-player_name = "Maddo"
-player_hp = 100
-player_max_hp = 100
-player_mp = 30
-player_max_mp = 30
-player_atb = 0
+# Battle settings
 atb_max = 100
-battle_menu_index = 0
-menu_options = ["Attack", "Magic", "Item"]
-magic_options = ["Hex", "Cure"]
-magic_index = 0
-player_turn = False
-in_magic_menu = False
-battle_log = ""
+menu_options = ["Attack", "Magic", "Conjure", "Item"]
 
-# Enemy variables
-enemy_hp = 100
-enemy_max_hp = 100
-enemy_atb = 0
-enemy_turn = False
-enemy_attack_cycle = ["Knife Stab", "Knife Stab", "Knife Fury"]
-enemy_attack_index = 0
+# Shared items
+items = [
+    {"name": "Potion", "heal": 40, "quantity": 2},
+    {"name": "Ether", "mp_restore": 20, "quantity": 1},
+]
 
-# Player setup
+# Movement
 player_speed = 5
-
-# Camera offset
-camera_x = 0
-
