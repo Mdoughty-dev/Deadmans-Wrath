@@ -1,4 +1,5 @@
 import pygame
+import random
 import globals as g
 from battle_controller import get_current_character, get_current_options, normalize_item, normalize_spell
 
@@ -13,12 +14,20 @@ def get_option_name(option):
 
 
 def draw_battle(screen, state, player_image, enemy_image, player_rect, enemy_rect):
+    shake_x = 0
+    shake_y = 0
+
+    if state["screen_shake"]["timer"] > 0:
+        strength = state["screen_shake"]["strength"]
+        shake_x = random.randint(-strength, strength)
+        shake_y = random.randint(-strength, strength)
+    
     current_character = get_current_character(state)
     current_enemy = state["current_enemy"]
 
     screen.fill(g.BLACK)
-    screen.blit(enemy_image, (g.WIDTH - enemy_rect.width - 100, enemy_rect.y))
-    screen.blit(player_image, (250, player_rect.y))
+    screen.blit(enemy_image, (g.WIDTH - enemy_rect.width - 100 + shake_x, enemy_rect.y + shake_y))
+    screen.blit(player_image, (250 + shake_x, player_rect.y + shake_y))
 
     box_width = 300
     box_height = 220
@@ -62,6 +71,7 @@ def draw_battle(screen, state, player_image, enemy_image, player_rect, enemy_rec
         True,
         g.WHITE,
     )
+
 
     screen.blit(name_text, (box_x + 20, box_y + 10))
     screen.blit(hp_text, (box_x + 20, box_y + 80))

@@ -35,3 +35,4 @@ items = [
 
 # Movement
 player_speed = 5
+

@@ -48,6 +48,7 @@ def update_bar(state, keys, player):
         visual["action"] = "idle"
 
 
+
 def draw_bar(screen, bar_image, player_image, player, character_rect, state, character_speech):
     screen.fill((30, 15, 15))
     screen.blit(bar_image, (0, 0))

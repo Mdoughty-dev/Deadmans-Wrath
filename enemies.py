@@ -20,3 +20,4 @@ def make_slug():
         "attack_cycle": ["Bite", "Slime Spit", "Body Slam"],
         "attack_index": 0
     }
+
