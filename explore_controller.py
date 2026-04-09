@@ -2,7 +2,7 @@ import pygame
 import sys
 import globals as g
 from battle_controller import start_battle
-from player_visuals import reset_player_visual_state
+from player_visuals import reset_player_visual_state, apply_depth_scaling
 
 
 def present_scaled(display_surface, game_surface):
@@ -16,7 +16,7 @@ def present_scaled(display_surface, game_surface):
     pygame.display.flip()
 
 
-def update_explore(state, keys, player, background):
+def update_explore(state, keys, player, background, base_width, base_height):
     visual = state["player_visual_state"]
     moving = False
 
@@ -31,7 +31,9 @@ def update_explore(state, keys, player, background):
         visual["action"] = "walk"
         visual["facing"] = "right"
         moving = True
-
+    
+    apply_depth_scaling(player, base_width, base_height)
+    
     if not moving:
         visual["action"] = "idle"
 
@@ -97,8 +99,8 @@ def handle_explore_keys(
         state["game_state"] = g.STATE_BAR
         state["show_dialogue"] = False
         state["dialogue_tracker"] = 0
-        player.x = 100
-        player.y = 300
+        player.x = 1500
+        player.y = 200
         player.width = player.width * 2
         player.height = player.height * 2
         player_image = pygame.transform.scale(

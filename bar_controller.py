@@ -1,6 +1,6 @@
 import pygame
 import globals as g
-from player_visuals import reset_player_visual_state
+from player_visuals import reset_player_visual_state, apply_depth_scaling
 
 
 def handle_bar_input(event, state, player, character_speech, character_rect):
@@ -16,7 +16,7 @@ def handle_bar_input(event, state, player, character_speech, character_rect):
                     state["show_dialogue"] = False
 
 
-def update_bar(state, keys, player):
+def update_bar(state, keys, player, base_width, base_height):
     visual = state["player_visual_state"]
     moving = False
 
@@ -43,6 +43,8 @@ def update_bar(state, keys, player):
         visual["action"] = "walk"
         visual["facing"] = "right"
         moving = True
+    
+    apply_depth_scaling(player, base_width, base_height)
 
     if not moving:
         visual["action"] = "idle"

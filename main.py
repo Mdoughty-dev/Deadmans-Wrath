@@ -47,6 +47,9 @@ player_image = pygame.transform.scale(
     original_player_image, (int(player.width), int(player.height))
 )
 
+explore_base_width = int(g.HEIGHT / 8)
+explore_base_height = int(g.HEIGHT / 4)
+
 enemy = pygame.Rect(1800, (g.HEIGHT / 2) - (g.HEIGHT / 8), g.HEIGHT / 8, g.HEIGHT / 4)
 enemy_image = pygame.transform.scale(
     creeper_image_source, (int(enemy.width), int(enemy.height))
@@ -77,7 +80,7 @@ state = {
         "facing": "right",
         "frame_index": 0,
         "frame_timer": 0,
-        "animation_speed": 10,
+        "animation_speed": 2,
     },
     "attack_motion": {
         "active": False,
@@ -156,14 +159,14 @@ while running:
                         state["menu_selected_character"] - 1
                     ) % len(party_members)
 
-            if event.key == pygame.K_b or event.key == pygame.K_ESCAPE:
+            if event.key == pygame.K_b:
                 state["game_state"] = g.STATE_EXPLORE
                 reset_player_visual_state(state, action="idle")
 
     game_surface.fill(g.BLACK)
 
     if state["game_state"] == g.STATE_EXPLORE:
-        update_explore(state, keys, player, background)
+        update_explore(state, keys, player, background, explore_base_width, explore_base_height)
         update_player_animation(state, player_animations)
         current_player_frame = get_current_player_frame(
             state, player_animations, player_image
@@ -239,7 +242,7 @@ while running:
             )
 
     elif state["game_state"] == g.STATE_BAR:
-        update_bar(state, keys, player)
+        update_bar(state, keys, player,explore_base_width, explore_base_height)
         update_player_animation(state, player_animations)
         current_player_frame = get_current_player_frame(
             state, player_animations, player_image
