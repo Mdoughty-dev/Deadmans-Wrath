@@ -2,6 +2,7 @@ import pygame
 import sys
 import os
 
+
 def load_animation_folder(folder_path):
     frames = []
 
@@ -11,7 +12,8 @@ def load_animation_folder(folder_path):
             frames.append(load_image(path))
 
     return frames
-    
+
+
 def load_image(path, scale_to=None):
     try:
         image = pygame.image.load(path).convert_alpha()
@@ -22,7 +24,6 @@ def load_image(path, scale_to=None):
         print(f"❌ Could not load {path}: {e}")
         pygame.quit()
         sys.exit()
-
 
 
 def build_player_animations():
@@ -67,7 +68,7 @@ def load_assets(width, height):
     background = load_image("assets/background.png", (width * 4, height))
     character = load_image("assets/character.png")
     enemy = load_image("assets/enemy.png")
-    bar = load_image("assets/bar.png")
+    bar = load_image("assets/bar.png", (width, height))
 
     character_animations = build_player_animations()
 

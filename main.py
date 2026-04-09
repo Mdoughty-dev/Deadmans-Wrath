@@ -25,9 +25,15 @@ from player_visuals import (
 
 pygame.init()
 
-screen = pygame.display.set_mode((g.WIDTH, g.HEIGHT))
+display_info = pygame.display.Info()
+screen = pygame.display.set_mode(
+    (display_info.current_w, display_info.current_h),
+    pygame.FULLSCREEN
+)
 pygame.display.set_caption("The Deformed")
 clock = pygame.time.Clock()
+
+game_surface = pygame.Surface((g.WIDTH, g.HEIGHT))
 
 assets = load_assets(g.WIDTH, g.HEIGHT)
 background = assets["background"]
@@ -73,7 +79,7 @@ state = {
         "frame_timer": 0,
         "animation_speed": 10,
     },
-     "attack_motion": {
+    "attack_motion": {
         "active": False,
         "phase": "forward",
         "timer": 0,
@@ -95,6 +101,18 @@ player_animations = scale_animation_set(
     (int(player.width), int(player.height))
 )
 
+
+def present_scaled():
+    real_width, real_height = screen.get_size()
+
+    scaled_surface = pygame.transform.smoothscale(
+        game_surface, (real_width, real_height)
+    )
+
+    screen.blit(scaled_surface, (0, 0))
+    pygame.display.flip()
+
+
 running = True
 while running:
     keys = pygame.key.get_pressed()
@@ -102,6 +120,9 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
+            pygame.display.toggle_fullscreen()
 
         if state["game_state"] == g.STATE_BATTLE:
             handle_battle_input(event, state, player)
@@ -126,6 +147,8 @@ while running:
                 state["game_state"] = g.STATE_EXPLORE
                 reset_player_visual_state(state, action="idle")
 
+    game_surface.fill(g.BLACK)
+
     if state["game_state"] == g.STATE_EXPLORE:
         update_explore(state, keys, player, background)
         update_player_animation(state, player_animations)
@@ -134,7 +157,7 @@ while running:
         )
 
         draw_explore(
-            screen,
+            game_surface,
             state,
             background,
             enemy_image,
@@ -147,6 +170,7 @@ while running:
         player_image, enemy_image = handle_explore_keys(
             state,
             keys,
+            game_surface,
             screen,
             enemy,
             player,
@@ -169,7 +193,8 @@ while running:
             enemy.x -= 2
             if enemy.x < target_enemy_x:
                 enemy.x = target_enemy_x
-        draw_battle(screen, state, player_image, enemy_image, player, enemy)
+
+        draw_battle(game_surface, state, player_image, enemy_image, player, enemy)
 
         if len(get_alive_party_indices(state["characters"])) == 0:
             end_battle_loss(state)
@@ -208,7 +233,7 @@ while running:
         )
 
         draw_bar(
-            screen,
+            game_surface,
             bar,
             current_player_frame,
             player,
@@ -227,11 +252,13 @@ while running:
 
     elif state["game_state"] == g.STATE_MENU:
         reset_player_visual_state(state, action="idle")
-        draw_menu(screen, state)
-
-    pygame.display.flip()
+        draw_menu(game_surface, state)
+    if keys[pygame.K_1]:
+        pygame.quit()
+        sys.exit()
+        
+    present_scaled()
     clock.tick(g.FPS)
 
 pygame.quit()
 sys.exit()
-
