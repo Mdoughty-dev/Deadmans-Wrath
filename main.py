@@ -266,7 +266,7 @@ while running:
     elif state["game_state"] == g.STATE_MENU:
         reset_player_visual_state(state, action="idle")
         draw_menu(game_surface, state)
-    if keys[pygame.K_1]:
+    if keys[pygame.K_ESCAPE]:
         pygame.quit()
         sys.exit()
         
