@@ -1,7 +1,8 @@
 import pygame
 
-# Screen setup
-WIDTH, HEIGHT = 1920, 1080
+# Internal game resolution
+WIDTH = 1920
+HEIGHT = 1080
 FPS = 60
 
 # Colors
@@ -35,4 +36,3 @@ items = [
 
 # Movement
 player_speed = 5
-

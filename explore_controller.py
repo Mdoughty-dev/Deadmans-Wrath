@@ -5,6 +5,17 @@ from battle_controller import start_battle
 from player_visuals import reset_player_visual_state
 
 
+def present_scaled(display_surface, game_surface):
+    real_width, real_height = display_surface.get_size()
+
+    scaled_surface = pygame.transform.smoothscale(
+        game_surface, (real_width, real_height)
+    )
+
+    display_surface.blit(scaled_surface, (0, 0))
+    pygame.display.flip()
+
+
 def update_explore(state, keys, player, background):
     visual = state["player_visual_state"]
     moving = False
@@ -43,11 +54,11 @@ def draw_explore(screen, state, background, enemy_image, player_image, player, e
     screen.blit(player_image, (player.x - camera_x, player.y))
 
 
-
 def handle_explore_keys(
     state,
     keys,
-    screen,
+    game_surface,
+    display_surface,
     enemy,
     player,
     door_rect,
@@ -63,11 +74,12 @@ def handle_explore_keys(
     if player.colliderect(enemy):
         camera_x = state["camera_x"]
 
-        pygame.draw.rect(screen, g.DARK_BLUE, (enemy.x - camera_x, enemy.y - 200, 700, 150))
-        pygame.draw.rect(screen, g.WHITE, (enemy.x - camera_x, enemy.y - 200, 700, 150), 4)
+        pygame.draw.rect(game_surface, g.DARK_BLUE, (enemy.x - camera_x, enemy.y - 200, 700, 150))
+        pygame.draw.rect(game_surface, g.WHITE, (enemy.x - camera_x, enemy.y - 200, 700, 150), 4)
         threat = g.font.render("What you looking at punk!", True, g.WHITE)
-        screen.blit(threat, ((enemy.x - camera_x) + 30, enemy.y - 145))
-        pygame.display.flip()
+        game_surface.blit(threat, ((enemy.x - camera_x) + 30, enemy.y - 145))
+
+        present_scaled(display_surface, game_surface)
 
         pause_start = pygame.time.get_ticks()
         while pygame.time.get_ticks() - pause_start < 1000:
