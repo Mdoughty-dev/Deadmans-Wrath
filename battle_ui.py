@@ -1,7 +1,12 @@
 import pygame
 import random
 import globals as g
-from battle_controller import get_current_character, get_current_options, normalize_item, normalize_spell
+from battle_controller import (
+    get_current_character,
+    get_current_options,
+    normalize_item,
+    normalize_spell,
+)
 
 
 def get_option_name(option):
@@ -13,6 +18,22 @@ def get_option_name(option):
     return str(option)
 
 
+def draw_fire_projectile(screen, projectile, shake_x=0, shake_y=0):
+    if not projectile["active"]:
+        return
+
+    center = (int(projectile["x"]) + shake_x, int(projectile["y"]) + shake_y)
+
+    pygame.draw.circle(screen, (255, 220, 120), center, projectile["radius"] + 8)
+    pygame.draw.circle(screen, projectile["color"], center, projectile["radius"])
+    pygame.draw.circle(
+        screen,
+        (255, 255, 180),
+        center,
+        max(4, projectile["radius"] // 3),
+    )
+
+
 def draw_battle(screen, state, player_image, enemy_image, player_rect, enemy_rect):
     shake_x = 0
     shake_y = 0
@@ -21,13 +42,19 @@ def draw_battle(screen, state, player_image, enemy_image, player_rect, enemy_rec
         strength = state["screen_shake"]["strength"]
         shake_x = random.randint(-strength, strength)
         shake_y = random.randint(-strength, strength)
-    
+
     current_character = get_current_character(state)
     current_enemy = state["current_enemy"]
 
     screen.fill(g.BLACK)
-    screen.blit(enemy_image, (g.WIDTH - enemy_rect.width - 100 + shake_x, enemy_rect.y + shake_y))
-    screen.blit(player_image, (250 + shake_x, player_rect.y + shake_y))
+
+    enemy_draw_x = g.WIDTH - enemy_rect.width - 100
+    player_draw_x = 250
+
+    screen.blit(enemy_image, (enemy_draw_x + shake_x, enemy_rect.y + shake_y))
+    screen.blit(player_image, (player_draw_x + shake_x, player_rect.y + shake_y))
+
+    draw_fire_projectile(screen, state["spell_projectile"], shake_x, shake_y)
 
     box_width = 300
     box_height = 220
@@ -38,7 +65,11 @@ def draw_battle(screen, state, player_image, enemy_image, player_rect, enemy_rec
     pygame.draw.rect(screen, g.WHITE, (box_x + 320, box_y, box_width, box_height), 4)
 
     options = get_current_options(state)
-    selected_index = state["battle_menu_index"] if state["sub_menu_mode"] is None else state["sub_menu_index"]
+    selected_index = (
+        state["battle_menu_index"]
+        if state["sub_menu_mode"] is None
+        else state["sub_menu_index"]
+    )
 
     for i, option in enumerate(options):
         display_option = option
@@ -72,7 +103,6 @@ def draw_battle(screen, state, player_image, enemy_image, player_rect, enemy_rec
         g.WHITE,
     )
 
-
     screen.blit(name_text, (box_x + 20, box_y + 10))
     screen.blit(hp_text, (box_x + 20, box_y + 80))
     screen.blit(mp_text, (box_x + 20, box_y + 130))
@@ -95,6 +125,7 @@ def draw_battle(screen, state, player_image, enemy_image, player_rect, enemy_rec
         banner = pygame.Rect(g.WIDTH // 2 - 260, 110, 520, 100)
         pygame.draw.rect(screen, g.DARK_BLUE, banner)
         pygame.draw.rect(screen, g.WHITE, banner, 4)
+
         switch_text = g.font.render(f"{current_character['name']}'s turn", True, g.WHITE)
         screen.blit(
             switch_text,

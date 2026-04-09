@@ -94,6 +94,19 @@ state = {
         "timer": 0,
         "strength": 0,
     },
+    "spell_projectile": {
+    "active": False,
+    "spell_name": "",
+    "damage": 0,
+    "color": (255, 120, 40),
+    "radius": 18,
+    "x": 0,
+    "y": 0,
+    "target_x": 0,
+    "target_y": 0,
+    "speed": 24,
+    "damage_applied": False,
+    },
 }
 
 player_animations = scale_animation_set(
@@ -125,7 +138,7 @@ while running:
             pygame.display.toggle_fullscreen()
 
         if state["game_state"] == g.STATE_BATTLE:
-            handle_battle_input(event, state, player)
+            handle_battle_input(event, state, player, enemy)
 
         if state["game_state"] == g.STATE_BAR:
             handle_bar_input(event, state, player, character_speech, character_rect)

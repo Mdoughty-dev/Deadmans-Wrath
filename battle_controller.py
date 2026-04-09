@@ -42,6 +42,48 @@ def trigger_hit_effects(state):
     state["screen_shake"]["timer"] = 8
     state["screen_shake"]["strength"] = 8
 
+def start_spell_projectile(state, player, enemy, spell):
+    projectile = state["spell_projectile"]
+    projectile["active"] = True
+    projectile["spell_name"] = spell["name"]
+    projectile["damage"] = spell.get("damage", 0)
+    projectile["color"] = (255, 120, 40)
+    projectile["radius"] = 18
+    projectile["x"] = player.x + player.width - 20
+    projectile["y"] = player.y + player.height // 2 - 10
+    projectile["target_x"] = g.WIDTH - enemy.width - 100 + enemy.width // 2
+    projectile["target_y"] = enemy.y + enemy.height // 2
+    projectile["speed"] = 24
+    projectile["damage_applied"] = False
+
+def update_spell_projectile(state, enemy):
+    projectile = state["spell_projectile"]
+    if not projectile["active"]:
+        return
+    dx = projectile["target_x"] - projectile["x"]
+    dy = projectile["target_y"] - projectile["y"]
+    distance = max(1, (dx ** 2 + dy ** 2) ** 0.5)
+    if distance <= projectile["speed"]:
+        projectile["x"] = projectile["target_x"]
+        projectile["y"] = projectile["target_y"]
+        if not projectile["damage_applied"]:
+            state["current_enemy"]["hp"] -= projectile["damage"]
+            state["battle_log"] = (
+                f"{get_current_character(state)['name']} casts "
+                f"{projectile['spell_name']}!"
+            )
+            projectile["damage_applied"] = True
+            enemy.x += 12
+            trigger_hit_effects(state)
+        projectile["active"] = False
+        get_current_character(state)["atb"] = 0
+        state["player_turn"] = False
+        state["sub_menu_mode"] = None
+        queue_next_character(state)
+        return
+    projectile["x"] += dx / distance * projectile["speed"]
+    projectile["y"] += dy / distance * projectile["speed"]
+
 def update_attack_motion(state, player, enemy):
     motion = state["attack_motion"]
 
@@ -145,6 +187,7 @@ def start_battle(state, player, enemy, original_player_image, creeper_image):
     state["switch_banner_until"] = 0
     state["battle_log"] = ""
     state["current_enemy"] = make_creeper()
+    state["spell_projectile"]["active"] = False
 
     for member in state["characters"]:
         member["atb"] = 0
@@ -182,6 +225,7 @@ def end_battle_win(state, player, enemy, original_player_image):
     state["game_state"] = g.STATE_EXPLORE
     state["sub_menu_mode"] = None
     state["player_turn"] = False
+    state["spell_projectile"]["active"] = False
 
     enemy.x = 10000
     player.y = 450
@@ -221,7 +265,7 @@ def perform_attack(state, player):
     start_attack_motion(state, player)
 
 
-def perform_magic(state):
+def perform_magic(state, player, enemy):
     current_character = get_current_character(state)
     spell = normalize_spell(current_character["spells"][state["sub_menu_index"]])
 
@@ -230,7 +274,11 @@ def perform_magic(state):
         return
 
     current_character["mp"] -= spell.get("cost", 0)
-
+    if spell.get("effect") == "projectile_fire" and spell.get("damage", 0) > 0:
+        start_spell_projectile(state, player, enemy, spell)
+        state["battle_log"] = f"{current_character['name']} casts {spell['name']}!"
+        state["sub_menu_mode"] = None
+        return
     if "damage" in spell and spell["damage"] > 0:
         state["current_enemy"]["hp"] -= spell["damage"]
         state["battle_log"] = f"{current_character['name']} casts {spell['name']}!"
@@ -320,7 +368,7 @@ def enemy_take_turn(state):
     current_enemy["turn"] = False
 
 
-def handle_battle_input(event, state, player):
+def handle_battle_input(event, state, player, enemy):
     if event.type != pygame.KEYDOWN:
         return
 
@@ -330,6 +378,9 @@ def handle_battle_input(event, state, player):
         return
 
     if not state["player_turn"]:
+        return
+
+    if state["attack_motion"]["active"] or state["spell_projectile"]["active"]:
         return
 
     current_character = get_current_character(state)
@@ -387,20 +438,25 @@ def handle_battle_input(event, state, player):
         else:
             if len(options) > 0:
                 if state["sub_menu_mode"] == "magic":
-                    perform_magic(state)
+                    perform_magic(state, player, enemy)
                 elif state["sub_menu_mode"] == "conjure":
                     perform_conjure(state)
                 elif state["sub_menu_mode"] == "item":
                     perform_item(state)
 
 
-
 def update_battle(state, player, enemy):
     update_hit_pause_and_shake(state)
     update_attack_motion(state, player, enemy)
+    update_spell_projectile(state, enemy)
 
-    if state["attack_motion"]["active"] or state["hit_pause"] > 0:
+    if (
+        state["attack_motion"]["active"]
+        or state["spell_projectile"]["active"]
+        or state["hit_pause"] > 0
+    ):
         return
+
     now = pygame.time.get_ticks()
     current_character = get_current_character(state)
     current_enemy = state["current_enemy"]
