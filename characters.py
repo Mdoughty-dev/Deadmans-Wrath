@@ -8,7 +8,7 @@ def make_maddo():
         "in_party": True,
         "atb": 0,
         "spells": [
-            {"name": "Hex", "cost": 10, "damage": 50},
+            {"name": "Hex", "cost": 10, "damage": 50, "effect": "projectile_fire"},
             {"name": "Cure", "cost": 5, "heal": 40}
         ],
         "conjures": [
