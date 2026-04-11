@@ -20,13 +20,25 @@ def update_explore(state, keys, player, background, base_width, base_height):
     visual = state["player_visual_state"]
     moving = False
 
-    if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+    if keys[pygame.K_UP] or keys[pygame.K_w]:
+        player.y -= g.player_speed
+        visual["action"] = "walk"
+        visual["facing"] = "up"
+        moving = True
+
+    elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+        player.y += g.player_speed
+        visual["action"] = "walk"
+        visual["facing"] = "down"
+        moving = True
+
+    elif keys[pygame.K_LEFT] or keys[pygame.K_a]:
         player.x -= g.player_speed
         visual["action"] = "walk"
         visual["facing"] = "left"
         moving = True
 
-    if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+    elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
         player.x += g.player_speed
         visual["action"] = "walk"
         visual["facing"] = "right"

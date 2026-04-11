@@ -47,15 +47,21 @@ def reset_player_visual_state(state, action="idle", facing=None):
     visual["frame_timer"] = 0
 
 def apply_depth_scaling(player, base_width, base_height):
-    min_scale = .9
+    min_scale = 0.9
     max_scale = 1.5
 
     t = max(0, min(1, player.y / g.HEIGHT))
     scale = min_scale + (max_scale - min_scale) * t
 
+    new_width = round(base_width * scale)
+    new_height = round(base_height * scale)
+
+    if player.width == new_width and player.height == new_height:
+        return
+
     old_midbottom = player.midbottom
 
-    player.width = int(base_width * scale)
-    player.height = int(base_height * scale)
+    player.width = new_width
+    player.height = new_height
 
     player.midbottom = old_midbottom

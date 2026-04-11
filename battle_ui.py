@@ -18,23 +18,23 @@ def get_option_name(option):
     return str(option)
 
 
-def draw_fire_projectile(screen, projectile, shake_x=0, shake_y=0):
+def draw_spell_projectile(screen, projectile, spell_images, shake_x=0, shake_y=0):
     if not projectile["active"]:
         return
 
-    center = (int(projectile["x"]) + shake_x, int(projectile["y"]) + shake_y)
+    effect = projectile.get("effect", "")
+    image = spell_images.get(effect)
 
-    pygame.draw.circle(screen, (255, 220, 120), center, projectile["radius"] + 8)
-    pygame.draw.circle(screen, projectile["color"], center, projectile["radius"])
-    pygame.draw.circle(
-        screen,
-        (255, 255, 180),
-        center,
-        max(4, projectile["radius"] // 3),
-    )
+    if image is None:
+        return
+
+    draw_x = int(projectile["x"]) + shake_x - image.get_width() // 2
+    draw_y = int(projectile["y"]) + shake_y - (image.get_height() // 2) - 150
+
+    screen.blit(image, (draw_x, draw_y))
 
 
-def draw_battle(screen, state, player_image, enemy_image, player_rect, enemy_rect):
+def draw_battle(screen, state, player_image, enemy_image, player_rect, enemy_rect, spell_images):
     shake_x = 0
     shake_y = 0
 
@@ -54,7 +54,7 @@ def draw_battle(screen, state, player_image, enemy_image, player_rect, enemy_rec
     screen.blit(enemy_image, (enemy_draw_x + shake_x, enemy_rect.y + shake_y))
     screen.blit(player_image, (player_draw_x + shake_x, player_rect.y + shake_y))
 
-    draw_fire_projectile(screen, state["spell_projectile"], shake_x, shake_y)
+    draw_spell_projectile(screen, state["spell_projectile"], spell_images, shake_x, shake_y)
 
     box_width = 300
     box_height = 220

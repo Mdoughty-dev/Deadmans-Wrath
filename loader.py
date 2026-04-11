@@ -71,6 +71,9 @@ def load_assets(width, height):
     bar = load_image("assets/bar.png", (width, height))
 
     character_animations = build_player_animations()
+    spell_images = {
+        "hex": load_image("assets/spells/hex.png", (400, 550))
+    }
 
     return {
         "background": background,
@@ -78,4 +81,5 @@ def load_assets(width, height):
         "character_animations": character_animations,
         "enemy": enemy,
         "bar": bar,
+        "spell_images" : spell_images,
     }

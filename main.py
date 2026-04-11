@@ -41,6 +41,7 @@ original_player_image = assets["character"]
 base_player_animations = assets["character_animations"]
 creeper_image_source = assets["enemy"]
 bar = assets["bar"]
+spell_images = assets["spell_images"]
 
 player = pygame.Rect(600, (g.HEIGHT / 2) - (g.HEIGHT / 8), g.HEIGHT / 8, g.HEIGHT / 4)
 player_image = pygame.transform.scale(
@@ -100,9 +101,8 @@ state = {
     "spell_projectile": {
     "active": False,
     "spell_name": "",
+    "effect": "",
     "damage": 0,
-    "color": (255, 120, 40),
-    "radius": 18,
     "x": 0,
     "y": 0,
     "target_x": 0,
@@ -210,7 +210,7 @@ while running:
             if enemy.x < target_enemy_x:
                 enemy.x = target_enemy_x
 
-        draw_battle(game_surface, state, player_image, enemy_image, player, enemy)
+        draw_battle(game_surface, state, player_image, enemy_image, player, enemy, spell_images)
 
         if len(get_alive_party_indices(state["characters"])) == 0:
             end_battle_loss(state)

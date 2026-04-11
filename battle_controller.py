@@ -319,14 +319,13 @@ def start_spell_projectile(state, player, enemy, spell):
     projectile = state["spell_projectile"]
     projectile["active"] = True
     projectile["spell_name"] = spell["name"]
+    projectile["effect"] = spell.get("effect", "")
     projectile["damage"] = spell.get("damage", 0)
-    projectile["color"] = (255, 120, 40)
-    projectile["radius"] = 18
     projectile["x"] = player.x + player.width - 20
-    projectile["y"] = player.y + player.height // 2 - 10
+    projectile["y"] = player.y + player.height // 2
     projectile["target_x"] = g.WIDTH - enemy.width - 100 + enemy.width // 2
     projectile["target_y"] = enemy.y + enemy.height // 2
-    projectile["speed"] = 24
+    projectile["speed"] = spell.get("projectile_speed", 24)
     projectile["damage_applied"] = False
 
 def perform_magic(state, player, enemy):
@@ -338,20 +337,28 @@ def perform_magic(state, player, enemy):
         return
 
     current_character["mp"] -= spell.get("cost", 0)
-    if spell.get("effect") == "projectile_fire" and spell.get("damage", 0) > 0:
+
+    # Any spell with an effect + damage uses the projectile system
+    if spell.get("effect") and spell.get("damage", 0) > 0:
         start_spell_projectile(state, player, enemy, spell)
         state["battle_log"] = f"{current_character['name']} casts {spell['name']}!"
         state["sub_menu_mode"] = None
         return
-    if "damage" in spell and spell["damage"] > 0:
+
+    # Instant damage spell
+    if spell.get("damage", 0) > 0:
         state["current_enemy"]["hp"] -= spell["damage"]
         state["battle_log"] = f"{current_character['name']} casts {spell['name']}!"
-    elif "heal" in spell and spell["heal"] > 0:
+
+    # Heal spell
+    elif spell.get("heal", 0) > 0:
         current_character["hp"] = min(
             current_character["max_hp"],
             current_character["hp"] + spell["heal"],
         )
         state["battle_log"] = f"{current_character['name']} casts {spell['name']}!"
+
+    # Fallback
     else:
         state["battle_log"] = f"{current_character['name']} uses {spell['name']}!"
 
