@@ -1,6 +1,7 @@
 import pygame
 import sys
 from loader import load_assets, scale_animation_set
+from battle_controller import use_menu_item_on_character
 import globals as g
 from characters import characters
 from enemies import make_creeper
@@ -110,6 +111,8 @@ state = {
     "speed": 24,
     "damage_applied": False,
     },
+    "menu_mode": "party",          # "party" or "items"
+    "menu_item_index": 0,
 }
 
 player_animations = scale_animation_set(
@@ -133,6 +136,9 @@ running = True
 while running:
     keys = pygame.key.get_pressed()
 
+    # -------------------------
+    # INPUT
+    # -------------------------
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -150,23 +156,60 @@ while running:
             party_members = get_party_members(state["characters"])
 
             if len(party_members) > 0:
-                if event.key == pygame.K_DOWN:
-                    state["menu_selected_character"] = (
-                        state["menu_selected_character"] + 1
-                    ) % len(party_members)
-                elif event.key == pygame.K_UP:
-                    state["menu_selected_character"] = (
-                        state["menu_selected_character"] - 1
-                    ) % len(party_members)
+                if state["menu_mode"] == "party":
+                    if event.key == pygame.K_DOWN:
+                        state["menu_selected_character"] = (
+                            state["menu_selected_character"] + 1
+                        ) % len(party_members)
+
+                    elif event.key == pygame.K_UP:
+                        state["menu_selected_character"] = (
+                            state["menu_selected_character"] - 1
+                        ) % len(party_members)
+
+                    elif event.key == pygame.K_RIGHT:
+                        state["menu_mode"] = "items"
+                        state["menu_item_index"] = 0
+
+                elif state["menu_mode"] == "items":
+                    if len(g.items) > 0:
+                        if event.key == pygame.K_DOWN:
+                            state["menu_item_index"] = (
+                                state["menu_item_index"] + 1
+                            ) % len(g.items)
+
+                        elif event.key == pygame.K_UP:
+                            state["menu_item_index"] = (
+                                state["menu_item_index"] - 1
+                            ) % len(g.items)
+
+                        elif event.key == pygame.K_RETURN:
+                            use_menu_item_on_character(state)
+
+                    if event.key == pygame.K_LEFT or event.key == pygame.K_ESCAPE:
+                        state["menu_mode"] = "party"
+                        state["menu_item_index"] = 0
 
             if event.key == pygame.K_b:
                 state["game_state"] = g.STATE_EXPLORE
+                state["menu_mode"] = "party"
+                state["menu_item_index"] = 0
                 reset_player_visual_state(state, action="idle")
 
+    # -------------------------
+    # UPDATE / DRAW
+    # -------------------------
     game_surface.fill(g.BLACK)
 
     if state["game_state"] == g.STATE_EXPLORE:
-        update_explore(state, keys, player, background, explore_base_width, explore_base_height)
+        update_explore(
+            state,
+            keys,
+            player,
+            background,
+            explore_base_width,
+            explore_base_height,
+        )
         update_player_animation(state, player_animations)
         current_player_frame = get_current_player_frame(
             state, player_animations, player_image
@@ -204,13 +247,22 @@ while running:
 
     elif state["game_state"] == g.STATE_BATTLE:
         update_battle(state, player, enemy)
+
         target_enemy_x = g.WIDTH - enemy.width - 100
         if enemy.x > target_enemy_x:
             enemy.x -= 2
             if enemy.x < target_enemy_x:
                 enemy.x = target_enemy_x
 
-        draw_battle(game_surface, state, player_image, enemy_image, player, enemy, spell_images)
+        draw_battle(
+            game_surface,
+            state,
+            player_image,
+            enemy_image,
+            player,
+            enemy,
+            spell_images,
+        )
 
         if len(get_alive_party_indices(state["characters"])) == 0:
             end_battle_loss(state)
@@ -219,7 +271,9 @@ while running:
 
         if state["current_enemy"]["hp"] <= 0:
             print("Enemy defeated!")
-            player_image = end_battle_win(state, player, enemy, original_player_image)
+            player_image = end_battle_win(
+                state, player, enemy, original_player_image
+            )
 
             player_animations = scale_animation_set(
                 base_player_animations,
@@ -242,7 +296,7 @@ while running:
             )
 
     elif state["game_state"] == g.STATE_BAR:
-        update_bar(state, keys, player,explore_base_width, explore_base_height)
+        update_bar(state, keys, player, explore_base_width, explore_base_height)
         update_player_animation(state, player_animations)
         current_player_frame = get_current_player_frame(
             state, player_animations, player_image
@@ -269,10 +323,11 @@ while running:
     elif state["game_state"] == g.STATE_MENU:
         reset_player_visual_state(state, action="idle")
         draw_menu(game_surface, state)
+
     if keys[pygame.K_ESCAPE]:
         pygame.quit()
         sys.exit()
-        
+
     present_scaled()
     clock.tick(g.FPS)
 

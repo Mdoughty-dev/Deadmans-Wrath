@@ -12,42 +12,58 @@ def get_option_name(option):
     return str(option)
 
 
+def draw_bar(screen, x, y, width, height, current_value, max_value, fill_color, border_color):
+    pygame.draw.rect(screen, g.DARK_BLUE, (x, y, width, height))
+    pygame.draw.rect(screen, border_color, (x, y, width, height), 2)
+
+    if max_value > 0:
+        fill_width = int((current_value / max_value) * (width - 4))
+        pygame.draw.rect(screen, fill_color, (x + 2, y + 2, fill_width, height - 4))
+
+
 def draw_menu(screen, state):
     screen.fill(g.BLACK)
 
     party_members = get_party_members(state["characters"])
 
-    left_rect = pygame.Rect(0, 0, g.WIDTH // 2, g.HEIGHT)
-    right_rect = pygame.Rect(g.WIDTH // 2, 0, g.WIDTH // 2, g.HEIGHT)
+    left_rect = pygame.Rect(30, 30, 760, g.HEIGHT - 60)
+    right_rect = pygame.Rect(830, 30, g.WIDTH - 860, g.HEIGHT - 60)
 
+    pygame.draw.rect(screen, g.DARK_BLUE, left_rect)
     pygame.draw.rect(screen, g.WHITE, left_rect, 4)
+
+    pygame.draw.rect(screen, g.DARK_BLUE, right_rect)
     pygame.draw.rect(screen, g.WHITE, right_rect, 4)
 
-    pygame.draw.rect(screen, g.WHITE, (0, 0, g.WIDTH // 2, 120), 4)
-    pygame.draw.rect(screen, g.WHITE, (g.WIDTH // 2, 0, g.WIDTH // 2, 120), 4)
+    title_left = g.font.render("PARTY", True, g.WHITE)
+    title_right = g.font.render("STATUS", True, g.WHITE)
 
-    party_text = g.font.render("PARTY", True, g.WHITE)
-    menu_text = g.font.render("MENU", True, g.WHITE)
-
-    screen.blit(party_text, (g.WIDTH // 4 - party_text.get_width() // 2, 35))
-    screen.blit(menu_text, (g.WIDTH * 3 // 4 - menu_text.get_width() // 2, 35))
+    screen.blit(title_left, (left_rect.x + 30, left_rect.y + 20))
+    screen.blit(title_right, (right_rect.x + 30, right_rect.y + 20))
 
     if len(party_members) == 0:
         none_text = g.small_font.render("No party members", True, g.WHITE)
-        screen.blit(none_text, (80, 180))
+        screen.blit(none_text, (left_rect.x + 30, left_rect.y + 100))
         return
 
     if state["menu_selected_character"] >= len(party_members):
         state["menu_selected_character"] = 0
 
+    menu_mode = state.get("menu_mode", "party")
+    menu_item_index = state.get("menu_item_index", 0)
+
+    # LEFT: party cards
     for i, member in enumerate(party_members):
-        color = g.RED if i == state["menu_selected_character"] else g.WHITE
-        y = 180 + i * 140
+        selected = i == state["menu_selected_character"] and menu_mode == "party"
+        border_color = g.RED if selected else g.WHITE
 
-        pygame.draw.rect(screen, g.DARK_BLUE, (50, y, 760, 110))
-        pygame.draw.rect(screen, color, (50, y, 760, 110), 4)
+        y = left_rect.y + 100 + i * 130
+        card = pygame.Rect(left_rect.x + 25, y, left_rect.width - 50, 100)
 
-        name_surface = g.small_font.render(member["name"], True, color)
+        pygame.draw.rect(screen, g.BLACK, card)
+        pygame.draw.rect(screen, border_color, card, 3)
+
+        name_surface = g.small_font.render(member["name"], True, border_color)
         hp_surface = g.small_font.render(
             f"HP: {member['hp']}/{member['max_hp']}", True, g.WHITE
         )
@@ -55,40 +71,68 @@ def draw_menu(screen, state):
             f"MP: {member['mp']}/{member['max_mp']}", True, g.WHITE
         )
 
-        screen.blit(name_surface, (80, y + 10))
-        screen.blit(hp_surface, (80, y + 45))
-        screen.blit(mp_surface, (380, y + 45))
+        screen.blit(name_surface, (card.x + 20, card.y + 12))
+        screen.blit(hp_surface, (card.x + 20, card.y + 45))
+        screen.blit(mp_surface, (card.x + 260, card.y + 45))
 
-    
     selected = party_members[state["menu_selected_character"]]
 
-    info_y = 160
+    # RIGHT: character sheet
     name_title = g.font.render(selected["name"], True, g.WHITE)
-    screen.blit(name_title, (g.WIDTH // 2 + 40, info_y))
+    screen.blit(name_title, (right_rect.x + 30, right_rect.y + 80))
 
-    spells_title = g.small_font.render("Spells", True, g.WHITE)
-    screen.blit(spells_title, (g.WIDTH // 2 + 40, info_y + 100))
+    draw_bar(screen, right_rect.x + 30, right_rect.y + 145, 320, 24, selected["hp"], selected["max_hp"], g.RED, g.WHITE)
+    draw_bar(screen, right_rect.x + 30, right_rect.y + 190, 320, 24, selected["mp"], selected["max_mp"], g.BLUE, g.WHITE)
 
-    for i, spell in enumerate(selected.get("spells", [])):
-        spell_name = get_option_name(normalize_spell(spell))
-        text = g.small_font.render(f"- {spell_name}", True, g.WHITE)
-        screen.blit(text, (g.WIDTH // 2 + 60, info_y + 145 + i * 35))
+    hp_text = g.small_font.render(f"HP {selected['hp']} / {selected['max_hp']}", True, g.WHITE)
+    mp_text = g.small_font.render(f"MP {selected['mp']} / {selected['max_mp']}", True, g.WHITE)
+    screen.blit(hp_text, (right_rect.x + 365, right_rect.y + 144))
+    screen.blit(mp_text, (right_rect.x + 365, right_rect.y + 189))
 
-    conjure_title = g.small_font.render("Conjures", True, g.WHITE)
-    screen.blit(conjure_title, (g.WIDTH // 2 + 40, info_y + 320))
+    stats_title = g.small_font.render("Stats", True, g.WHITE)
+    screen.blit(stats_title, (right_rect.x + 30, right_rect.y + 250))
 
-    for i, conjure in enumerate(selected.get("conjures", [])):
-        conjure_name = get_option_name(normalize_spell(conjure))
-        text = g.small_font.render(f"- {conjure_name}", True, g.WHITE)
-        screen.blit(text, (g.WIDTH // 2 + 60, info_y + 365 + i * 35))
+    stats = selected.get("stats", {})
+    stat_lines = [
+        f"Attack:  {stats.get('attack', 0)}",
+        f"Magic:   {stats.get('magic', 0)}",
+        f"Defence: {stats.get('defence', 0)}",
+        f"Speed:   {stats.get('speed', 0)}",
+        f"Agility: {stats.get('agility', 0)}",
+    ]
+
+    for i, line in enumerate(stat_lines):
+        txt = g.small_font.render(line, True, g.WHITE)
+        screen.blit(txt, (right_rect.x + 50, right_rect.y + 290 + i * 32))
+
+    status_title = g.small_font.render("Status Effects", True, g.WHITE)
+    screen.blit(status_title, (right_rect.x + 30, right_rect.y + 470))
+
+    effects = selected.get("status_effects", [])
+    if effects:
+        for i, effect in enumerate(effects):
+            txt = g.small_font.render(
+                f"{effect['name'].upper()} ({effect['duration']})", True, g.RED
+            )
+            screen.blit(txt, (right_rect.x + 50, right_rect.y + 510 + i * 30))
+    else:
+        txt = g.small_font.render("None", True, g.WHITE)
+        screen.blit(txt, (right_rect.x + 50, right_rect.y + 510))
+
+    # bottom right item box
+    item_box = pygame.Rect(right_rect.x + 30, right_rect.y + 610, right_rect.width - 60, 220)
+    pygame.draw.rect(screen, g.BLACK, item_box)
+    pygame.draw.rect(screen, g.WHITE, item_box, 3)
 
     items_title = g.small_font.render("Shared Items", True, g.WHITE)
-    screen.blit(items_title, (g.WIDTH // 2 + 40, info_y + 520))
+    screen.blit(items_title, (item_box.x + 20, item_box.y + 15))
 
     for i, item in enumerate(g.items):
         item_name = get_option_name(normalize_item(item))
-        text = g.small_font.render(f"- {item_name}", True, g.WHITE)
-        screen.blit(text, (g.WIDTH // 2 + 60, info_y + 565 + i * 35))
+        color = g.RED if menu_mode == "items" and i == menu_item_index else g.WHITE
+        text = g.small_font.render(item_name, True, color)
+        screen.blit(text, (item_box.x + 30, item_box.y + 55 + i * 30))
 
-    help_text = g.small_font.render("UP/DOWN = select   B = back", True, g.WHITE)
-    screen.blit(help_text, (g.WIDTH // 2 + 40, g.HEIGHT - 80))
+    controls = "UP/DOWN select  RIGHT items  LEFT back  ENTER use item  B exit"
+    help_text = g.small_font.render(controls, True, g.WHITE)
+    screen.blit(help_text, (right_rect.x + 30, g.HEIGHT - 55))
